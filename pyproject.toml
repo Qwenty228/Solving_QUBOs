@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "binaryquadraticmodel-101"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+scipy = "^1.13.1"
+qiskit = "^1.2.4"
+qiskit-aer = "^0.15.1"
+qiskit-algorithms = "^0.3.1"
+qiskit-ibm-runtime = "^0.30.0"
+qiskit-optimization = "^0.6.1"
+numpy = "^2.1.1"
+ipykernel = "^6.29.5"
+matplotlib = "^3.9.2"
+pylatexenc = "^2.10"
+qiskit-aer-gpu = "^0.15.1"
+amplify = "^1.2.1"
+python-dotenv = "^1.0.1"
+minorminer = "^0.2.16"
+dwave-system = "^1.27.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
