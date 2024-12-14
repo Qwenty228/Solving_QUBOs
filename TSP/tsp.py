@@ -32,7 +32,45 @@ class TSP(BaseQUBO):
             return {"model": None}
     
     def interpret(self, result, solver, verbose=False):
-        return super().interpret(result, solver, verbose)
+        super().interpret(result, solver, verbose)
+        if solver == "Qiskit":
+            counts_int = result[0].data.meas.get_int_counts()
+            counts_bin = result[0].data.meas.get_counts()
+            shots = sum(counts_int.values())
+            final_distribution_int = {key: val/shots for key, val in counts_int.items()}
+            self.final_distribution_bin = {key: val/shots for key, val in counts_bin.items()}
+            if verbose:
+                print(f"distribution: \n", final_distribution_int)
+            
+            n = len(self.graph)
+
+            keys = list(final_distribution_int.keys())
+            values = list(final_distribution_int.values())
+            most_likely = keys[np.argmax(np.abs(values))]
+            most_likely_bitstring = to_bitstring(most_likely, n**2)
+            return reorder(most_likely_bitstring, n, reverse=True)
+        else:
+            return ()
+    
+    def plot_distribution(self, n: int=20):
+        if self.final_distribution_bin and self.solver == "Qiskit":
+            matplotlib.rcParams.update({"font.size": 10})
+
+            final_bits_reduced = {key: value for key, value in sorted(self.final_distribution_bin.items(), key= lambda x: x[1], reverse=True)[:n]}
+            for key, value in final_bits_reduced.items():
+                print(f"bitstring: {reorder(key, len(self.graph), reverse=True)}, probability: {value}")
+
+            fig = plt.figure(figsize=(11, 6))
+            ax = fig.add_subplot(1, 1, 1)
+            plt.xticks(rotation=45)
+            plt.title("Result Distribution")
+            plt.xlabel("Bitstrings (reversed)")
+            plt.ylabel("Probability")
+            ax.bar(list(final_bits_reduced.keys()), list(final_bits_reduced.values()), color="tab:grey")
+
+            plt.show()
+        else:
+            print("No distribution to plot")
     
     def brute_force(self):
         return super().brute_force()
@@ -125,3 +163,41 @@ def tsp_quad(weights: np.ndarray) -> QuadraticProgram:
             linear={f'x_{i}_{p}': 1 for i in range(size)}, sense='==', rhs=1)
 
     return qp
+
+def reorder(x: list, size: int, reverse=False):
+    """
+    Reorder the binary list to match the order of the cities.
+
+    Given a binary list representing city visits in the TSP problem, this function 
+    reorders the list to match the order in which cities are visited based on a 
+    specific format.
+
+    Parameters
+    ----------
+    x : list
+        A binary list of length `size * size` representing the possible visitations
+        of cities. A value of `1` at index `i` indicates that the city `(i % size)` 
+        is visited at step `(i // size)`.
+    size : int
+        The number of cities involved in the TSP problem.
+
+    Returns
+    -------
+    y : np.ndarray
+        A reordered array of city indices, indicating the order in which the cities 
+        are visited.
+
+    Examples
+    --------
+    >>> x = [0, 1, 0, 1, 0, 1, 1, 0, 0]
+    >>> size = 3
+    >>> reorder(x, size)
+    array([1., 2., 0.])
+    """
+    if reverse:
+        x = x[::-1]
+    y = np.zeros(size)
+    for i, v in enumerate(x):
+        if int(v) == 1:
+            y[int(i) % size] = i // size
+    return y
