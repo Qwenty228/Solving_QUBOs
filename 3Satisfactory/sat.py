@@ -1,6 +1,7 @@
 import rustworkx as rx
 import numpy as np
-import random
+import sympy
+import re
 import matplotlib
 
 from matplotlib import pyplot as plt
@@ -15,13 +16,24 @@ __all__ = ["ThreeSat"]
 class ThreeSat(BaseQUBO):
     def __init__(self, filename: str):
         super().__init__()
-        self.clauses, self.num_n, self.num_m = read_cnf_file(filename)
+        if filename != None:
+            self.clauses, self.num_n, self.num_m = read_cnf_file(filename)
         self.final_distribution_bin = None
+        self.K = 0 # cost offset
+        
+    @classmethod
+    def from_clauses(cls, clauses: np.ndarray, num_n: int):
+        obj = cls(None)
+        obj.clauses = clauses
+        obj.num_n = num_n
+        obj.num_m = clauses.shape[0]
+        return obj
+        
         
     def qubo(self, solver, penalty = 10):
         super().qubo(solver, penalty)
         if solver == "Qiskit":
-            qp = maxcut_quad(self.weight_matrix)
+            qp = sat_quad(self.clauses, self.num_n)
             qp2qubo = QuadraticProgramToQubo(penalty=penalty)
             qubo = qp2qubo.convert(qp)
             qubitOp, offset = qubo.to_ising()
@@ -45,7 +57,7 @@ class ThreeSat(BaseQUBO):
             keys = list(final_distribution_int.keys())
             values = list(final_distribution_int.values())
             most_likely = keys[np.argmax(np.abs(values))]
-            most_likely_bitstring = to_bitstring(most_likely, len(self.graph))
+            most_likely_bitstring = to_bitstring(most_likely, self.num_m + self.num_n)
             most_likely_bitstring.reverse()
             return most_likely_bitstring
         else:
@@ -79,6 +91,24 @@ class ThreeSat(BaseQUBO):
     def brute_force(self) -> tuple:
         pass
     
+    def verify(self, result) -> tuple[bool, int, list]:
+        num_clauses_True = 0
+        wrong_clause = []
+        for clause in self.clauses:
+            clause_Truth_value = False
+            for literal in clause:
+                if literal > 0 and result[literal - 1] == 1:
+                    clause_Truth_value = True
+                    break
+                elif literal < 0 and result[abs(literal) - 1] == 0:
+                    clause_Truth_value = True
+                    break
+            if clause_Truth_value:
+                num_clauses_True += 1
+            else:
+                wrong_clause.append(clause)
+        return (num_clauses_True == self.clauses.shape[0]), num_clauses_True, wrong_clause
+    
 def read_cnf_file(filename: str) -> tuple[np.ndarray, int, int]:
     clauses = []
 
@@ -104,24 +134,67 @@ def read_cnf_file(filename: str) -> tuple[np.ndarray, int, int]:
 
 
 
-def maxcut_quad(weight_matrix: np.ndarray) -> QuadraticProgram:
-    size = weight_matrix.shape[0]
-    # convert maxcut cost function into a Quadratic Program
-    qubo_matrix = np.zeros([size, size]) # Q
-    qubo_linear = np.zeros(size) # c
 
-    for i in range(size):
-        for j in range(size):
-            qubo_matrix[i, j] += weight_matrix[i, j]
-            qubo_linear[i] -= weight_matrix[i, j]
 
-  
-    # Create an instance of a Quadratic Program
-    qp = QuadraticProgram("Maxcut")
-    for i in range(size):
-        qp.binary_var(f"x_{i}")
-    qp.minimize(quadratic=qubo_matrix, linear=qubo_linear)
+def sat_QUBO(clauses: np.ndarray[np.int_], num_literals: int) -> tuple[np.ndarray[np.int_], int]:
+    num_x = num_literals 
+    x = sympy.symbols(f'x0:{num_x}') # x0, x1, ... x_num_x -1
+    num_m = clauses.shape[0] # clauses matrix Row
+    w = sympy.symbols(f'w0:{num_m}') # w0, w1, ... w_num_m - 1
+    QUBO_matrix = np.zeros((num_x + num_m, num_x + num_m), dtype=int)
+    sum_g = 0
 
+    error = False
+    
+    for i in range(num_m):
+        x_array = clauses[i]
+        # Make sure each clause is within specified literals.
+        if (x_array[np.abs(x_array) > num_x].size > 0):
+            error = True
+            break
+
+        y_i1 = x[x_array[0] - 1] if (x_array[0] > 0) else (1 + (-1 * x[x_array[0] * -1 - 1]))
+        y_i2 = x[x_array[1] - 1] if (x_array[1] > 0) else (1 + (-1 * x[x_array[1] * -1 - 1]))
+        y_i3 = x[x_array[2] - 1] if (x_array[2] > 0) else (1 + (-1 * x[x_array[2] * -1 - 1]))
+        sum_g += y_i1 + y_i2 + y_i3 + (w[i] * y_i1) + (w[i] * y_i2) + (w[i] * y_i3) - (y_i1 * y_i2) - (y_i1 * y_i3) - (y_i2 * y_i3) - 2 * w[i]
+    
+    sum_neg_g = sympy.simplify(-1 * sum_g)
+    sum_neg_g_dict = {str(term): coefficient for term, coefficient in sum_neg_g.as_coefficients_dict().items()}
+
+    for term in sum_neg_g_dict:
+        # print(f'{term}: {sum_neg_g_dict[term]}')
+        if re.match(r'^w\d+$', term): # w[i]
+            i = int(term[1:]) + num_x
+            j = int(term[1:]) + num_x
+            QUBO_matrix[i][j] = sum_neg_g_dict[term]
+        elif re.match(r'^x\d+$', term): # x[i]
+            i = int(term[1:])
+            j = int(term[1:])
+            QUBO_matrix[i][j] = sum_neg_g_dict[term]
+        elif re.match(r'^w(0|[1-9][0-9]*)\*x(\d+)$', term): # w[i] * x[j]
+            match = re.match(r'^w(0|[1-9][0-9]*)\*x(\d+)$', term)
+            w_number = int(match.group(1))
+            x_number = int(match.group(2))
+            QUBO_matrix[x_number][w_number + num_x] = sum_neg_g_dict[term]
+        elif re.match(r'^x(0|[1-9][0-9]*)\*x(\d+)$', term): # x[i] * x[j]
+            match = re.match(r'^x(0|[1-9][0-9]*)\*x(\d+)$', term)
+            first_x_number = int(match.group(1))
+            second_x_number = int(match.group(2))
+            QUBO_matrix[first_x_number][second_x_number] = sum_neg_g_dict[term]
+        elif re.match(r'^1$', term):
+            K = sum_neg_g_dict[term]
+    
+    if (error):
+        return "An error has occured, Make sure the literals in each clause are within the specified literals."
+    else:
+        return QUBO_matrix, K
+    
+    
+def sat_quad(clauses: np.ndarray[np.int_], num_literals: int) -> QuadraticProgram:
+    qubo, _ = sat_QUBO(clauses, num_literals)
+    qp = QuadraticProgram()
+    for i in range(qubo.shape[0]):
+        qp.binary_var(f'x{i}')
+
+    qp.minimize(quadratic=qubo)
     return qp
-
-
