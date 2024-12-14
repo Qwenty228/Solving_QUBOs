@@ -67,13 +67,13 @@ class ThreeSat(BaseQUBO):
         if self.solver == 'Qiskit' and self.final_distribution_bin is not None:
             matplotlib.rcParams.update({"font.size": 10})
 
-            final_bits_reduced = {str(key): value for key, value in sorted(self.final_distribution_bin.items(), key= lambda x: x[1], reverse=True)[:n]}
+            final_bits_reduced = {str(key[::-1]): value for key, value in sorted(self.final_distribution_bin.items(), key= lambda x: x[1], reverse=True)[:n]}
 
             fig = plt.figure(figsize=(11, 6))
             ax = fig.add_subplot(1, 1, 1)
             plt.xticks(rotation=45)
             plt.title("Result Distribution")
-            plt.xlabel("Bitstrings (reversed)")
+            plt.xlabel("Bitstrings")
             plt.ylabel("Probability")
             ax.bar(list(final_bits_reduced.keys()), list(final_bits_reduced.values()), color="tab:grey")
 

@@ -64,7 +64,7 @@ class TSP(BaseQUBO):
             ax = fig.add_subplot(1, 1, 1)
             plt.xticks(rotation=45)
             plt.title("Result Distribution")
-            plt.xlabel("Bitstrings (reversed)")
+            plt.xlabel("Bitstrings")
             plt.ylabel("Probability")
             ax.bar(list(final_bits_reduced.keys()), list(final_bits_reduced.values()), color="tab:grey")
 
