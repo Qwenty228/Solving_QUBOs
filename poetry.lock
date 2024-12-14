@@ -776,6 +776,19 @@ files = [
 ]
 
 [[package]]
+name = "docplex"
+version = "2.29.241"
+description = "The IBM Decision Optimization CPLEX Modeling for Python"
+optional = false
+python-versions = "*"
+files = [
+    {file = "docplex-2.29.241.tar.gz", hash = "sha256:ad5250396be0cea02b732710795bb9e345d9923bbb0bf66520f66eb8f1e988ad"},
+]
+
+[package.dependencies]
+six = "*"
+
+[[package]]
 name = "dwave-cloud-client"
 version = "0.13.2"
 description = "A minimal client for interacting with D-Wave cloud resources."
@@ -2711,6 +2724,16 @@ docs = ["sphinx", "sphinx-rtd-theme", "zope.interface"]
 tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
 
 [[package]]
+name = "pylatexenc"
+version = "2.10"
+description = "Simple LaTeX parser providing latex-to-unicode and unicode-to-latex conversion"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pylatexenc-2.10.tar.gz", hash = "sha256:3dd8fd84eb46dc30bee1e23eaab8d8fb5a7f507347b23e5f38ad9675c84f40d3"},
+]
+
+[[package]]
 name = "pyparsing"
 version = "3.2.0"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
@@ -3060,6 +3083,22 @@ qasm3-import = ["qiskit-qasm3-import (>=0.1.0)"]
 visualization = ["Pillow (>=4.2.1)", "matplotlib (>=3.3)", "pydot", "pylatexenc (>=1.4)", "seaborn (>=0.9.0)"]
 
 [[package]]
+name = "qiskit-algorithms"
+version = "0.3.1"
+description = "Qiskit Algorithms: A library of quantum computing algorithms"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "qiskit_algorithms-0.3.1-py3-none-any.whl", hash = "sha256:d6c31d88a1ed65a9c6382c233ef10ecb9562e726f7b1b7823a0d178d63d29a0a"},
+    {file = "qiskit_algorithms-0.3.1.tar.gz", hash = "sha256:cba9c573d47c0f9508745a5a2794298084ec4f8833781b426fa9b2cea0fca794"},
+]
+
+[package.dependencies]
+numpy = ">=1.17"
+qiskit = ">=0.44"
+scipy = ">=1.4"
+
+[[package]]
 name = "qiskit-ibm-runtime"
 version = "0.34.0"
 description = "IBM Quantum client for Qiskit Runtime."
@@ -3086,6 +3125,32 @@ common = ["black (>=24.1,<25.0)", "coverage (>=6.3)", "ddt (>=1.2.0,!=1.4.0,!=1.
 dev = ["qiskit-ibm-runtime[common]", "qiskit-ibm-runtime[documentation]"]
 documentation = ["Sphinx (>=6)", "jupyter-sphinx", "nbsphinx", "packaging", "sphinx-autodoc-typehints (<=1.19.2)", "sphinx-automodapi", "sphinxcontrib-katex (==0.9.9)"]
 visualization = ["plotly (>=5.23.0)"]
+
+[[package]]
+name = "qiskit-optimization"
+version = "0.6.1"
+description = "Qiskit Optimization: A library for optimization applications using quantum computing"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "qiskit-optimization-0.6.1.tar.gz", hash = "sha256:0ad8c2bc83fe80657c788b5f282ce4055d0ec005c4876789e5069499ee3c00c0"},
+    {file = "qiskit_optimization-0.6.1-py3-none-any.whl", hash = "sha256:3f09f31289dfef66bbbb03b782a94d88a4ba5681c728b4b8e96884de5fc83879"},
+]
+
+[package.dependencies]
+docplex = ">=2.21.207,<2.24.231 || >2.24.231"
+networkx = ">=2.6.3"
+numpy = ">=1.17"
+qiskit = ">=0.44"
+qiskit-algorithms = ">=0.2.0"
+scipy = ">=1.9.0"
+setuptools = ">=40.1.0"
+
+[package.extras]
+cplex = ["cplex"]
+cvx = ["cvxpy"]
+gurobi = ["gurobipy"]
+matplotlib = ["matplotlib"]
 
 [[package]]
 name = "referencing"
@@ -3786,4 +3851,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "83cdb70c45356b79c45070eda6931ded9ed5bb212486a04af05d20b3de0c5b96"
+content-hash = "6e6801a9fb3fcb767591f5b082ea13c42dad99357d9f8d4af256af5194251e73"

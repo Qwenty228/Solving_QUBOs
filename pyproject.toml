@@ -18,6 +18,8 @@ python-dotenv = "^1.0.1"
 qiskit-ibm-runtime = "^0.34.0"
 rustworkx = "^0.15.1"
 matplotlib = "^3.9.4"
+qiskit-optimization = "^0.6.1"
+pylatexenc = "^2.10"
 
 [build-system]
 requires = ["poetry-core"]
