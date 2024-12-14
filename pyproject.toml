@@ -1,27 +1,15 @@
 [tool.poetry]
-name = "binaryquadraticmodel-101"
+name = "solving-qubos"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "Solving Quadratic Unconstrained Binary Optimization problems with quantum and classical solvers."
+authors = ["Nathan Kittichaikoonkij"]
 readme = "README.md"
+packages = [{include = "utils"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
-scipy = "^1.13.1"
-qiskit = "^1.2.4"
-qiskit-aer = "^0.15.1"
-qiskit-algorithms = "^0.3.1"
-qiskit-ibm-runtime = "^0.30.0"
-qiskit-optimization = "^0.6.1"
-numpy = "^2.1.1"
+notebook = "^7.3.1"
 ipykernel = "^6.29.5"
-pylatexenc = "^2.10"
-amplify = "^1.2.1"
-python-dotenv = "^1.0.1"
-minorminer = "^0.2.16"
-dwave-system = "^1.27.0"
-matplotlib = "^3.9.3"
-
 
 [build-system]
 requires = ["poetry-core"]
