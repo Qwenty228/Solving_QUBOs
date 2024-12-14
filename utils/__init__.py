@@ -1,4 +1,4 @@
 
-__all__ = ["hello"]
+__all__ = ["BaseQUBO"]
 
-from .qubo import hello
+from .qubo import BaseQUBO
