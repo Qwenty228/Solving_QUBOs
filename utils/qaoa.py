@@ -2,13 +2,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 from qiskit.primitives import StatevectorSampler as Sampler
 
+from utils.utils import validate_initial_point
 
 class QAOA:
     
     def __init__(self, circuit, reps = 2):
         initial_gamma = np.pi
         initial_beta = np.pi/2
-        self.init_params = [initial_gamma, initial_beta] * reps
+        self.init_params = validate_initial_point([initial_gamma, initial_beta] * reps, circuit)
         self.objective_func_vals = [] 
         self.circuit = circuit
 
@@ -35,5 +36,5 @@ class QAOA:
         plt.xlabel("Iteration")
         plt.ylabel("Cost")
         plt.show()
-        return self.objective_func_vals[-1]
+        return min(self.objective_func_vals)
     
